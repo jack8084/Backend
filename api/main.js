@@ -10,20 +10,15 @@ const app = express();
 const port = process.env.PORT || 3000;
 const MONGOURL = process.env.MONGO_URL;
 
-// --- CRITICAL CORS CONFIGURATION ---
-// REPLACE 'https://your-frontend-domain.vercel.app' with your actual production frontend URL.
-// The wildcard pattern allows all preview deployments (e.g., branch-name.your-frontend-domain.vercel.app)
 const ALLOWED_ORIGINS = [
     'https://portfolio-website-omega-puce-54.vercel.app/', 
-    /^https:\/\/.*\.vercel\.app$/, // Allows all Vercel preview deployments (e.g. branch-name.vercel.app)
-    'http://localhost:5173', // Include your local development domain(s)
+    /^https:\/\/.*\.vercel\.app$/,
+    'http://localhost:5173',
     'http://localhost:3000',
 ];
 
-// Custom CORS middleware configuration
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         
         const isAllowed = ALLOWED_ORIGINS.some(allowedOrigin => {
@@ -43,13 +38,12 @@ app.use(cors({
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'OPTIONS'], // Explicitly allowed methods
+    methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true
 }));
 
 app.use(bodyParser.json());
 
-// Database Connection
 mongoose
     .connect(MONGOURL)
     .then(() => {
@@ -59,7 +53,6 @@ mongoose
         console.error("Database connection error:", error);
     });
 
-// Schema and Model Definition (unchanged)
 const messageschema = new mongoose.Schema({
     Name: {
         type: String,
@@ -104,9 +97,7 @@ app.post("/message", async (req, res) => {
     } catch (error) {
         console.error('Error saving message', error);
 
-        // Check for validation errors from Mongoose
         if (error.name === 'ValidationError') {
-             // Extract specific validation messages
              const errors = Object.values(error.errors).map(err => err.message);
              return res.status(400).json({
                  success: false,
