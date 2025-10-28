@@ -10,39 +10,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 const MONGOURL = process.env.MONGO_URL;
 
-const ALLOWED_ORIGINS = [
-    'https://portfolio-website-omega-puce-54.vercel.app/', 
-    /^https:\/\/.*\.vercel\.app$/,
-    'http://localhost:5173',
-    'http://localhost:3000',
-];
-
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        
-        const isAllowed = ALLOWED_ORIGINS.some(allowedOrigin => {
-            if (typeof allowedOrigin === 'string') {
-                return origin === allowedOrigin;
-            } else if (allowedOrigin instanceof RegExp) {
-                return allowedOrigin.test(origin);
-            }
-            return false;
-        });
-
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            // Log for debugging (optional)
-            console.warn(`CORS block: Request from unauthorized origin ${origin}`);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'OPTIONS'],
-    credentials: true
-}));
-
 app.use(bodyParser.json());
+app.use(cors)
 
 mongoose
     .connect(MONGOURL)
