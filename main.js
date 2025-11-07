@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.get("/", (req, res) => res.send("✅ API is working properly"));
 
 // Message route
-app.post("/message", async (req, res) => {
+app.post("message", async (req, res) => {
   const data = req.body; // data from frontend
   const result = await saveUserToDB(data);
 
