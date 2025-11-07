@@ -1,87 +1,40 @@
 import express from "express";
+import "dotenv/config";
 import cors from "cors";
 import bodyParser from "body-parser";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-dotenv.config();
+import connectdb from "./configs/db.js";
+import saveUserToDB from "./functions/saveuser.js";
 
 const app = express();
-const port = process.env.PORT || 3000;
-const MONGOURL = process.env.MONGO_URL;
 
+// Connect to MongoDB
+await connectdb();
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
 app.use(bodyParser.json());
-app.use(cors())
 
-mongoose
-    .connect(MONGOURL)
-    .then(() => {
-        console.log("Database is connected successfully");
-    })
-    .catch((error) => {
-        console.error("Database connection error:", error);
-    });
+// Health check route
+app.get("/", (req, res) => res.send("✅ API is working properly"));
 
-const messageschema = new mongoose.Schema({
-    Name: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    Email: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true,
-    },
-    Message: {
-        type: String,
-        required: true,
-    },
-    sentAt: {
-        type: Date,
-        default: Date.now,
-    },
-});
-
-const Message = mongoose.model("Message", messageschema);
-
-// Routes
-app.get("/", (req, res) => {
-    res.send("hey this this is my backend working properly");
-});
-
+// Message route
 app.post("/message", async (req, res) => {
-    console.log("Received data", req.body);
+  const data = req.body; // data from frontend
+  const result = await saveUserToDB(data);
 
-    try {
-        const newMessage = new Message(req.body);
-        await newMessage.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'Your message is received and we will reply you soon'
-        });
-
-    } catch (error) {
-        console.error('Error saving message', error);
-
-        if (error.name === 'ValidationError') {
-             const errors = Object.values(error.errors).map(err => err.message);
-             return res.status(400).json({
-                 success: false,
-                 message: 'Validation failed.',
-                 details: errors,
-             });
-        }
-        
-        res.status(500).json({
-            success: false,
-            message: 'Failed to send message please try again later'
-        });
-    }
+  if (result.success) {
+    res
+      .status(201)
+      .json({ message: "User saved successfully!", user: result.user });
+  } else {
+    res
+      .status(500)
+      .json({ message: "Failed to save user", error: result.error });
+  }
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+export default app;
