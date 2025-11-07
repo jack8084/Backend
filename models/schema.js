@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
 
-  messages: {
+  message: {
     type: String,
     required: true,
     trim: true,
